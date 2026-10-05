@@ -27,7 +27,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
 class LumaTamper(LumaEntity, BinarySensorEntity):
     _attr_device_class = BinarySensorDeviceClass.TAMPER
-    _attr_name = "Tamper"
+    _attr_translation_key = "tamper"
 
     def __init__(self, gateway, index):
         super().__init__(gateway, index, "tamper")
@@ -48,7 +48,7 @@ def _detector_entities(gateway, index):
 
 class LumaSmoke(LumaEntity, BinarySensorEntity):
     _attr_device_class = BinarySensorDeviceClass.SMOKE
-    _attr_name = "Smoke"
+    _attr_translation_key = "smoke"
 
     def __init__(self, gateway, index):
         super().__init__(gateway, index, "smoke")
@@ -64,7 +64,7 @@ class LumaSmoke(LumaEntity, BinarySensorEntity):
 
 class LumaHeat(LumaEntity, BinarySensorEntity):
     _attr_device_class = BinarySensorDeviceClass.HEAT
-    _attr_name = "Heat"
+    _attr_translation_key = "heat"
 
     def __init__(self, gateway, index):
         super().__init__(gateway, index, "heat")
@@ -81,7 +81,7 @@ class LumaHeat(LumaEntity, BinarySensorEntity):
 class LumaOnline(LumaEntity, BinarySensorEntity):
     """Last fresh inventory reachability, independent of entity availability."""
 
-    _attr_name = "Online"
+    _attr_translation_key = "online"
     _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 

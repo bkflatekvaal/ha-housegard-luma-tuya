@@ -26,6 +26,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady("Selected Tuya gateway is not available yet")
 
     gateway = entry.runtime_data = LumaGateway(hass, entry, manager, gateway_id)
+    # HA also runs unload callbacks when setup fails or is cancelled.
+    entry.async_on_unload(gateway.async_close)
     await gateway.async_restore()
     entry.async_on_unload(
         async_dispatcher_connect(

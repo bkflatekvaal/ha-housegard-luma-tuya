@@ -10,7 +10,58 @@
       }
     },
     "abort": {
-      "no_gateways": "No unconfigured Housegard Luma gateways were found in Tuya."
+      "no_gateways": "No unconfigured Housegard Luma gateways were found in Tuya.",
+      "already_configured": "This Luma gateway is already configured."
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "smoke": {
+        "name": "Smoke"
+      },
+      "heat": {
+        "name": "Heat"
+      },
+      "tamper": {
+        "name": "Tamper"
+      },
+      "online": {
+        "name": "Online"
+      }
+    },
+    "sensor": {
+      "battery": {
+        "name": "Battery"
+      },
+      "rssi": {
+        "name": "RSSI"
+      },
+      "last_seen": {
+        "name": "Last seen"
+      },
+      "devices": {
+        "name": "Devices"
+      },
+      "online_devices": {
+        "name": "Online devices"
+      },
+      "offline_devices": {
+        "name": "Offline devices"
+      }
+    },
+    "button": {
+      "refresh_devices": {
+        "name": "Refresh devices"
+      },
+      "network_test": {
+        "name": "Network Test"
+      },
+      "sound_test": {
+        "name": "Sound Test"
+      },
+      "locate": {
+        "name": "Locate"
+      }
     }
   }
 }

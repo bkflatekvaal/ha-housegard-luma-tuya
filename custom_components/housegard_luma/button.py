@@ -1,7 +1,9 @@
 """Explicit gateway actions and per-alarm Locate buttons."""
 
 from homeassistant.components.button import ButtonEntity
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import EntityCategory
 
 from .entity import LumaEntity, async_setup_subdevices
@@ -26,7 +28,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class LumaRefreshButton(ButtonEntity):
     _attr_has_entity_name = True
     _attr_should_poll = False
-    _attr_name = "Refresh devices"
+    _attr_translation_key = "refresh_devices"
     _attr_icon = "mdi:refresh"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
@@ -39,12 +41,31 @@ class LumaRefreshButton(ButtonEntity):
             model="WS2GW-R",
         )
 
+    @property
+    def available(self):
+        return self.gateway.can_network_test()
+
+    async def async_added_to_hass(self):
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, self.gateway.signal, self.async_write_ha_state
+            )
+        )
+
     async def async_press(self):
-        await self.gateway.async_request_inventory()
+        if not self.available:
+            raise HomeAssistantError("Refresh devices is unavailable")
+        sent = await self.gateway.async_request_inventory()
+        if not sent and self.gateway.inventory_refresh.get("state") in (
+            "send_failed",
+            "unavailable",
+        ):
+            raise HomeAssistantError("Could not send Refresh devices command")
 
 
 class LumaLocateButton(LumaEntity, ButtonEntity):
-    _attr_name = "Locate"
+    _attr_translation_key = "locate"
     _attr_icon = "mdi:bullhorn"
 
     def __init__(self, gateway, index):
@@ -61,7 +82,7 @@ class LumaLocateButton(LumaEntity, ButtonEntity):
 class LumaNetworkTestButton(LumaRefreshButton):
     """Explicit gateway RF test; completion and per-device status are unverified."""
 
-    _attr_name = "Network Test"
+    _attr_translation_key = "network_test"
     _attr_icon = "mdi:access-point-network"
 
     def __init__(self, gateway):
@@ -79,7 +100,7 @@ class LumaNetworkTestButton(LumaRefreshButton):
 class LumaSoundTestButton(LumaRefreshButton):
     """Potentially noisy gateway action; only an explicit press sends it."""
 
-    _attr_name = "Sound Test"
+    _attr_translation_key = "sound_test"
     _attr_icon = "mdi:volume-high"
 
     def __init__(self, gateway):

@@ -12,9 +12,11 @@ class HouseguardLumaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
         choices = {}
         for tuya_entry in self.hass.config_entries.async_entries("tuya"):
-            if tuya_entry.runtime_data is None:
+            runtime = getattr(tuya_entry, "runtime_data", None)
+            manager = getattr(runtime, "manager", None)
+            if manager is None:
                 continue
-            for device in tuya_entry.runtime_data.manager.device_map.values():
+            for device in manager.device_map.values():
                 if getattr(device, "product_id", None) == LUMA_PRODUCT_ID:
                     key = f"{tuya_entry.entry_id}:{device.id}"
                     choices[key] = f"{device.name} ({device.id[-6:]})"

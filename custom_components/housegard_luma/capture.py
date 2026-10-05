@@ -102,10 +102,18 @@ class DP38Capture:
         """Use verified raw IDs, explicit codes and supplemental SDK metadata."""
         code, dp_id = item.get("code"), item.get("dpId")
         if isinstance(dp_id, str) and dp_id.isdecimal():
-            dp_id = int(dp_id)
+            try:
+                dp_id = int(dp_id)
+            except ValueError:
+                # Python rejects excessively long integer strings.
+                return None
         mapped = self.dp_codes.get(dp_id) if type(dp_id) is int else None
         if code is not None:
-            if code in self.codes and (mapped is None or mapped == code):
+            if (
+                isinstance(code, str)
+                and code in self.codes
+                and (mapped is None or mapped == code)
+            ):
                 return code
             return None
         return mapped if mapped in self.codes else None

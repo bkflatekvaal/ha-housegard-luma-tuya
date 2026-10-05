@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.1.0
+
+- Redact name-bearing raw payloads and gateway identifiers from downloaded
+  diagnostics while retaining framing, state, freshness, and classifications.
+- Add English and Norwegian entity names through Home Assistant translation
+  keys, and complete the duplicate-gateway config-flow abort message.
+- Close gateway resources on failed/cancelled setup, tolerate unloaded Tuya
+  entries in gateway selection, and report explicit Refresh command failures.
+- Document completed automatic Online/Offline live verification and current
+  v1 scope; remove the RSSI/Last seen history exclusion recommendation.
+
 ## 0.0.2
 
 Initial public release preparation.

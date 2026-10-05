@@ -22,12 +22,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
             registry.async_remove(obsolete)
     async_add_entities(
         [
-            LumaInventoryCount(entry.runtime_data, key, name)
-            for key, name in (
-                ("devices", "Devices"),
-                ("online_devices", "Online devices"),
-                ("offline_devices", "Offline devices"),
-            )
+            LumaInventoryCount(entry.runtime_data, key)
+            for key in ("devices", "online_devices", "offline_devices")
         ]
     )
     async_setup_subdevices(
@@ -47,15 +43,13 @@ class LumaSensor(LumaEntity, SensorEntity):
     def __init__(self, gateway, index, key):
         super().__init__(gateway, index, key)
         self.key = key
+        self._attr_translation_key = key
         if key == "battery":
-            self._attr_name = "Battery"
             self._attr_device_class = SensorDeviceClass.BATTERY
             self._attr_native_unit_of_measurement = PERCENTAGE
         elif key == "last_seen":
-            self._attr_name = "Last seen"
             self._attr_device_class = SensorDeviceClass.TIMESTAMP
         else:
-            self._attr_name = "RSSI"
             self._attr_icon = "mdi:wifi"
             # HA signal_strength requires dB/dBm. The protocol's positive
             # byte has no verified unit; do not misrepresent it as dBm.
@@ -77,10 +71,10 @@ class LumaInventoryCount(SensorEntity):
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_icon = "mdi:counter"
 
-    def __init__(self, gateway, key, name):
+    def __init__(self, gateway, key):
         self.gateway = gateway
         self.key = key
-        self._attr_name = name
+        self._attr_translation_key = key
         self._attr_unique_id = f"{gateway.gateway_id}_{key}"
         self._attr_device_info = DeviceInfo(identifiers={("tuya", gateway.gateway_id)})
 

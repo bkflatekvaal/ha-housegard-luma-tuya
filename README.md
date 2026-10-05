@@ -7,8 +7,8 @@ smoke alarms, heat alarms, and the Luma RC350 remote. The integration uses the
 existing official Tuya integration and its cloud push connection; it does not add
 its own separate credentials, local keys, or custom cloud client.
 
-Community integration, version **0.0.2**. See [CHANGELOG.md](CHANGELOG.md) for
-release notes. This repository can be used as a HACS custom repository; it is
+Community integration, version **0.1.0**, with core v1 functionality complete.
+See [CHANGELOG.md](CHANGELOG.md) for release notes. This repository can be used as a HACS custom repository; it is
 not listed in the default HACS catalog.
 
 ## What it does
@@ -130,21 +130,70 @@ This project is still a community integration and there are important limitation
 - The code is built around the current Tuya runtime and may need adjustments for
   future HA/Tuya SDK changes.
 
+## Online/Offline behavior and live verification
+
+Both automatic connectivity transitions are **live verified / DONE**:
+
+- Online -> Offline without manual Refresh devices.
+- Offline -> Online without manual Refresh devices.
+
+Home Assistant follows the connectivity state supplied by Luma/Tuya. Offline
+recognition can take a significant amount of time; once Luma/Tuya marks a
+detector Offline, Home Assistant follows automatically. Reconnection also
+updates automatically. This latency belongs to Luma/Tuya; the integration does
+not infer Offline from Last seen age or add a custom heartbeat/timeout.
+
+After restart, restored and cached connectivity remains unknown until fresh
+inventory or a supported Online event supplies current evidence. Individual
+reports do not establish Online by themselves. Offline counts include retained
+inventory records whose connectivity is unknown; there is no separate Unknown
+devices entity. RSSI and Last seen remain ordinary diagnostic sensors with
+normal Home Assistant updates and history.
+
+## V1 verification status
+
+Core v1 functionality is considered functionally complete and live verified.
+Discovery, inventory across sub_admin and continuation DPs, Refresh devices,
+Store/restoration, and multiple gateway isolation are complete. Battery, raw
+RSSI, Last seen, Online/Offline, and Tamper/Recovery are implemented and verified.
+Smoke and Heat Triggered/Restored behavior distinguishes physical/self tests
+from real alarms, including the verified real Heat Triggered -> Alarm Restored
+sequence. This does not add a separate Test event entity or device trigger.
+
+Per-alarm Locate is live verified for Smoke and Heat and dynamically targets the
+inventory index. Gateway Network Test and Sound Test are implemented and live
+verified. Their verified commands remain `07 07 FF 03 3C` and `07 07 FF 02`,
+respectively. Setup/reload sends one inventory query (`02 07`) after restoration
+and platform setup; it never automatically sends Locate, Network Test, or Sound
+Test. Explicit Refresh presses request inventory subject to the existing
+in-flight guard and cooldown.
+
+Physical incoming RC350 Test, Locate, and Hush/Silence actions are verified.
+They provide diagnostic classification; outbound RC350-equivalent group
+controls and robust Operation-log-only routing across remotes/re-pairing are
+future work.
+
 ## Diagnostics and privacy
 
-Diagnostics may include raw protocol captures and low-level packet information.
-These can contain device names, room names, gateway identifiers, and timestamps,
-including values that are not fully redacted in some captures.
+Downloaded diagnostics include redacted subdevice state, gateway model,
+inventory counts/freshness, framing information, and operation classifications.
+They exclude gateway IDs, device names, raw Base64/hex payloads, decoded text,
+and opaque inventory headers, which can contain personal identifiers. The
+integration does not export Tuya account data, local keys, tokens, IP addresses,
+MACs, factory serials, UUIDs, or location. Bounded raw captures remain internal
+for runtime processing; ordinary diagnostics exports do not include them.
 
-Base64 encoding is not anonymization. Review and sanitize diagnostics before
-sharing them publicly. Do not upload Home Assistant backups or `.storage` files
-to public issue reports or community support threads.
+Review diagnostics before sharing them publicly. Do not upload Home Assistant
+backups or `.storage` files to public issue reports or community support threads.
 
 ## Troubleshooting
 
 - **No gateway offered:** confirm the gateway is available in the official Tuya
   integration and uses product ID `s3x3xmgbeohtvm40`. Already configured gateways
   are excluded from the selection list.
+- **After manually reloading Tuya or reauthenticating:** reload Housegard Luma
+  afterward so it binds to the replacement Tuya manager. Normal MQ reconnects
+  within the existing manager are followed automatically.
 - **Missing devices:** press Refresh devices and allow up to 15 seconds for the
   response. Requests have a 30-second cooldown. Partial inventory responses
   retain previously discovered devices.
@@ -187,10 +236,14 @@ GitHub Actions runs the public tests, Ruff checks, compilation,
 HACS validation, and Home Assistant hassfest. Private evidence is excluded from
 Git, CI, and release artifacts.
 
-Push the public repository files to GitHub and wait for the validation jobs to
-pass. Publish tag `v0.0.2` with the notes in `CHANGELOG.md`, keeping the tag and
-manifest version aligned. HACS installs directly from the repository files.
+Before tagging a release, run the checks above and ensure the GitHub Actions
+hassfest and HACS jobs pass. Keep the release tag and manifest version aligned;
+choose a new version for updates to an already published release. HACS installs
+directly from the public repository files. Include only public source/tests and
+exclude the ignored `PRIVATE/` evidence archive from manually built artifacts.
 
-Before publishing, add GitHub repository topics such as `home-assistant`, `hacs`,
-`housegard`, and `tuya`, which are required by HACS validation. Create a GitHub
-release for the tag; a tag alone is not a HACS release.
+Confirm repository topics required by HACS validation (such as
+`home-assistant`, `hacs`, `housegard`, and `tuya`) and publish a GitHub release for
+the chosen tag. No release is published by this audit. See
+[the release audit](docs/release-audit-2026-10-05.md) for findings and validation
+limits.

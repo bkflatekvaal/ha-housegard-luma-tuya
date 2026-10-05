@@ -127,7 +127,7 @@ def test_same_entity_updates_without_recreation(ha, kind, field):
     for state in (0, 1, 0):
         gw._publish_devices(gw.registry.update_many(packet(kind=kind, alarm=state)))
         ha.send(gw.hass, gw.signal)
-        matches = [e for e in entities if e._attr_name.lower() == field]
+        matches = [e for e in entities if e._attr_translation_key == field]
         assert len(matches) == 1
         if alarm is None:
             alarm = matches[0]

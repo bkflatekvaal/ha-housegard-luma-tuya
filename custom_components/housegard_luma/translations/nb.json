@@ -10,7 +10,58 @@
       }
     },
     "abort": {
-      "no_gateways": "Fant ingen ukonfigurerte Housegard Luma-gatewayer i Tuya."
+      "no_gateways": "Fant ingen ukonfigurerte Housegard Luma-gatewayer i Tuya.",
+      "already_configured": "Denne Luma-gatewayen er allerede konfigurert."
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "smoke": {
+        "name": "Røyk"
+      },
+      "heat": {
+        "name": "Varme"
+      },
+      "tamper": {
+        "name": "Sabotasje"
+      },
+      "online": {
+        "name": "Tilkoblet"
+      }
+    },
+    "sensor": {
+      "battery": {
+        "name": "Batteri"
+      },
+      "rssi": {
+        "name": "RSSI"
+      },
+      "last_seen": {
+        "name": "Sist sett"
+      },
+      "devices": {
+        "name": "Enheter"
+      },
+      "online_devices": {
+        "name": "Tilkoblede enheter"
+      },
+      "offline_devices": {
+        "name": "Frakoblede enheter"
+      }
+    },
+    "button": {
+      "refresh_devices": {
+        "name": "Oppdater enheter"
+      },
+      "network_test": {
+        "name": "Nettverkstest"
+      },
+      "sound_test": {
+        "name": "Lydtest"
+      },
+      "locate": {
+        "name": "Finn enhet"
+      }
     }
   }
 }
