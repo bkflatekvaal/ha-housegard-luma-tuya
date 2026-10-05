@@ -344,7 +344,7 @@ class OperationLogCapture(DP38Capture):
             parse_result=(
                 "not_parsed_truncated"
                 if result["truncated"]
-                else "verified_rc350_signature"
+                else "recognized_operation_log"
                 if action is not None
                 else "unknown_operation_log"
             ),

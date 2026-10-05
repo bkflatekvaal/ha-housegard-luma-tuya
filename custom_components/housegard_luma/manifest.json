@@ -8,8 +8,8 @@
   "dependencies": [
     "tuya"
   ],
-  "iot_class": "cloud_push",
-  "version": "0.0.2",
   "documentation": "https://github.com/bkflatekvaal/ha-housegard-luma-tuya",
-  "issue_tracker": "https://github.com/bkflatekvaal/ha-housegard-luma-tuya/issues"
+  "iot_class": "cloud_push",
+  "issue_tracker": "https://github.com/bkflatekvaal/ha-housegard-luma-tuya/issues",
+  "version": "0.0.2"
 }

@@ -1,5 +1,6 @@
 # Local evidence must stay outside this repository. Defense in depth only.
 /private/
+/PRIVATE/
 /private_evidence/
 /PRIVATE*/
 /captures/
@@ -23,5 +24,6 @@ __pycache__/
 .venv/
 .coverage
 htmlcov/
+dist/
 .DS_Store
 Thumbs.db

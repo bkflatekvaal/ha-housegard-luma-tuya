@@ -67,7 +67,7 @@ def test_remote_inventory_and_text_do_not_clear_alarm(kind, field):
     registry.update(packet(kind=kind, alarm=1))
     registry.update(packet(kind=10, index=43, name="Remote A"))
     registry.update_many(inventory(kind))
-    registry.update("Detector A Alarm Restored SN:022A141C".encode("utf-16-be"))
+    registry.update("Detector A Alarm Restored SN:ABCDEF12".encode("utf-16-be"))
     assert getattr(registry.devices[42], field) is True
     registry.update(packet(kind=kind, alarm=0))
     assert getattr(registry.devices[42], field) is False
@@ -154,3 +154,83 @@ def test_command_constants_unchanged():
     assert INVENTORY_QUERY == "Agc="
     assert NETWORK_TEST_COMMAND == "Bwf/Azw="
     assert SOUND_TEST_COMMAND == "Bwf/Ag=="
+
+
+@pytest.mark.parametrize(
+    "text,expected",
+    [
+        ("Remote A Test Device SN:ABCDEF12", "test"),
+        ("Remote A Silence Device SN:ABCDEF12", "hush"),
+        ("Remote A Locate Device SN:ABCDEF12", "locate"),
+        ("Remote A Locate Device No:ABCDEF12345", "locate"),
+        ("Remote B SilHncH DHvice SN:12345678", "hush"),
+        ("Remote A Locate Device SN:invalid", None),
+        ("Remote A Unknown Device SN:ABCDEF12", None),
+    ],
+)
+def test_operation_diagnostic_vocabulary(text, expected):
+    from _luma_under_test.operation_log import classify_operation_log
+
+    assert classify_operation_log(text.encode("utf-16-be")) == expected
+
+
+def test_remote_reports_and_logs_never_send_commands(ha):
+    gw, _ = gateway(ha)
+    sent = []
+    gw.manager.send_commands = lambda *args: sent.append(args)
+    gw.registry.update(packet(alarm=1))
+    gw._handle_live_packet(
+        SimpleNamespace(
+            value=packet(kind=10, index=43, name="Remote A"),
+            code="sub_admin",
+            received_at=datetime.now(UTC).isoformat(),
+        )
+    )
+    gw._handle_operation_packet(
+        SimpleNamespace(
+            value="Remote A Locate Device SN:ABCDEF12".encode("utf-16-be"),
+            origin="live_report",
+            truncated=False,
+            received_at=datetime.now(UTC).isoformat(),
+        )
+    )
+    assert sent == []
+    assert gw.registry.devices[42].smoke is True
+    assert gw.registry.devices[43].device_type == 10
+
+
+@pytest.mark.parametrize(
+    "method,args,payload",
+    [
+        ("async_locate", (42,), "BwcqBA=="),
+        ("async_network_test", (), "Bwf/Azw="),
+        ("async_sound_test", (), "Bwf/Ag=="),
+        ("async_request_inventory", (), "Agc="),
+    ],
+)
+def test_explicit_commands_use_existing_tuya_manager(ha, method, args, payload):
+    gw, _ = gateway(ha)
+    gw.registry.update(packet())
+    gw.manager.mq = SimpleNamespace(add_message_listener=lambda listener: None)
+    sent = []
+    gw.manager.send_commands = lambda *args: sent.append(args)
+    asyncio.run(getattr(gw, method)(*args))
+    assert sent == [("example", [{"code": "sub_admin", "value": payload}])]
+
+
+@pytest.mark.parametrize("result", [False, {"success": False}, OSError("private")])
+@pytest.mark.parametrize("method", ["async_network_test", "async_sound_test"])
+def test_command_failures_are_reported_without_transport_details(ha, method, result):
+    gw, _ = gateway(ha)
+    gw.manager.mq = object()
+
+    def send(*args):
+        if isinstance(result, Exception):
+            raise result
+        return result
+
+    gw.manager.send_commands = send
+    with pytest.raises(RuntimeError) as error:
+        asyncio.run(getattr(gw, method)())
+    assert "private" not in str(error.value)
+    assert gw.registry.devices == {}

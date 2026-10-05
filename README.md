@@ -1,13 +1,15 @@
 # Housegard Luma
 
+![Housegard](custom_components/housegard_luma/brand/logo.svg)
+
 A custom Home Assistant integration for Housegard Luma gateways and their paired
 smoke alarms, heat alarms, and the Luma RC350 remote. The integration uses the
 existing official Tuya integration and its cloud push connection; it does not add
 its own separate credentials, local keys, or custom cloud client.
 
-This repository is a development/publication snapshot and is not yet a completed
-HACS release. See [RELEASE_PREPARATION.md](RELEASE_PREPARATION.md) before
-publishing or submitting it to HACS.
+Community integration, version **0.0.2**. See [CHANGELOG.md](CHANGELOG.md) for
+release notes. This repository can be used as a HACS custom repository; it is
+not listed in the default HACS catalog.
 
 ## What it does
 
@@ -30,31 +32,42 @@ including state and diagnostic entities for the gateway and each alarm.
   connected to the Housegard gateway.
 - A Luma gateway available in the Tuya device map.
 - The gateway product ID `s3x3xmgbeohtvm40`.
-- Development validation has been performed with Home Assistant 2026.9.4.
-  Older versions are not guaranteed to be compatible because this integration
-  depends on Tuya runtime internals.
+- Home Assistant **2026.9.4 or newer** is the supported baseline. Development
+  validation was performed with 2026.9.4; future versions may require changes
+  because the integration depends on Tuya runtime internals.
 
 ## Installation
 
 ### Manual install
 
-1. Copy only the folder `custom_components/housegard_luma` into your Home
+1. Clone this repository or download the source for the desired GitHub release.
+2. Copy only the folder `custom_components/housegard_luma` into your Home
    Assistant `custom_components` directory.
-2. Restart Home Assistant.
-3. In Home Assistant, open Settings → Devices & services.
-4. Add integration → choose `Housegard Luma`.
-5. Select the Luma gateway from the list of Tuya-managed gateways.
+3. Restart Home Assistant.
+4. In Home Assistant, open Settings → Devices & services.
+5. Add integration → choose `Housegard Luma`.
+6. Select the Luma gateway from the list of Tuya-managed gateways.
 
 The integration does not request additional Tuya credentials or local keys.
 
+The integration bundles Housegard's logo and icon in its `brand/` folder for
+Home Assistant 2026.3 and newer. Standard and high-resolution PNGs are rendered
+from the original SVGs. Artwork sources: [Housegard logo](https://www.housegard.se/build/static/images/housegard/logo.svg)
+and [Housegard icon](https://housegard.se/build/static/favicon/housegard/favicon.svg).
+Housegard branding belongs to its respective owner; the repository's MIT license
+applies to the integration code, not the third-party artwork. This is a community
+integration.
+
 ### HACS setup
 
-After the repository is published and validated, it can be added as a custom
-repository in HACS of type Integration. The repository URL is:
+1. Open HACS and select Custom repositories from its menu.
+2. Add `https://github.com/bkflatekvaal/ha-housegard-luma-tuya` with type Integration.
+3. Find Housegard Luma in HACS and download it.
+4. Restart Home Assistant, then add Housegard Luma from Settings → Devices & services.
 
-`https://github.com/bkflatekvaal/ha-housegard-luma-tuya`
-
-This does not imply that it is included in HACS's default catalog.
+For upgrades, update through HACS or replace the integration folder with the
+new release's copy, then restart Home Assistant. Keep the official Tuya
+integration configured.
 
 ## Features
 
@@ -68,6 +81,9 @@ The current implementation includes these behaviors:
 - Inventory counts for total, online, and offline devices
 - Per-alarm Locate action
 - Gateway actions for Refresh devices, Network Test, and Sound Test
+- RC350 discovery, inventory battery/RSSI, connectivity, and last-seen entities
+- Incoming Test/Locate/Hush diagnostic classification by operation vocabulary,
+  including the newer Locate `Device SN` variant
 - State restoration for previously known alarm states, with explicit verified
   clear events required before a persisted active alarm can be reset
 
@@ -76,16 +92,39 @@ generic Luma class names because the protocol does not reliably expose an exact
 commercial model. The remote retains its independently identified `Luma RC350`
 name when discovered.
 
+| Device | Entities and actions |
+| --- | --- |
+| Gateway | Devices, Online devices, Offline devices; Refresh devices, Network Test, Sound Test |
+| Smoke alarm | Smoke, Tamper, Online, Battery, RSSI, Last seen; Locate |
+| Heat alarm | Heat, Tamper, Online, Battery, RSSI, Last seen; Locate |
+| RC350 remote | Online, inventory Battery/RSSI, Last seen; incoming action diagnostics |
+
+Refresh devices requests paired-device inventory, not fresh detector telemetry.
+Locate and Sound Test can make alarms sound; commands are sent only when their
+buttons are pressed. Sending a command does not confirm its physical execution.
+Alarm states are updated from individual detector reports, not command echoes
+or remote button logs.
+
 ## Current limitations and caveats
 
 This project is still a community integration and there are important limitations:
 
-- RC350 outbound group Test/Locate/Hush actions are not implemented.
-- Incoming RC350 diagnostic classification is intentionally narrow and matches a
-  small set of exact observed strings; it is not generalized across all names,
-  indexes, and firmware variants.
+- RC350 outbound group Test/Locate/Hush actions still require verified outbound
+  Tuya Publish payloads and target semantics. Reviewed physical-button captures
+  contain incoming operation logs and `03 07` individual status reports, rather
+  than verified outbound commands. Repeated Hush and Locate status reports can
+  be identical except for a varying byte at the RSSI position; they do not
+  establish an action opcode to replay. Gateway Sound Test and per-alarm Locate
+  already have independently verified outbound commands.
+- Incoming diagnostic classification recognizes known operation vocabulary.
+  Names and `SN`/`No` suffixes are treated as opaque input and do not establish
+  remote identity, addressing, or a command payload.
 - Network Test completion and final-byte semantics are not fully resolved; the
   count sensors are based on inventory data rather than aggregate result frames.
+- Inventory counts retain devices across partial updates. Offline devices counts
+  records that are not known to be online, including unknown connectivity.
+- RC350 logs provide diagnostic classification, not Home Assistant device
+  triggers or outbound controls.
 - RSSI is exposed as a raw protocol value, not a calibrated dBm value.
 - Unknown or unsupported states remain unknown rather than being inferred.
 - The code is built around the current Tuya runtime and may need adjustments for
@@ -101,7 +140,30 @@ Base64 encoding is not anonymization. Review and sanitize diagnostics before
 sharing them publicly. Do not upload Home Assistant backups or `.storage` files
 to public issue reports or community support threads.
 
+## Troubleshooting
+
+- **No gateway offered:** confirm the gateway is available in the official Tuya
+  integration and uses product ID `s3x3xmgbeohtvm40`. Already configured gateways
+  are excluded from the selection list.
+- **Missing devices:** press Refresh devices and allow up to 15 seconds for the
+  response. Requests have a 30-second cooldown. Partial inventory responses
+  retain previously discovered devices.
+- **Unknown or unavailable values:** the protocol has not supplied a verified
+  value, or the Tuya gateway/transport is unavailable. Inventory does not refresh
+  Last seen; that timestamp requires an individual subdevice report.
+
+Report problems through [GitHub issues](https://github.com/bkflatekvaal/ha-housegard-luma-tuya/issues)
+with the integration and Home Assistant versions, device class, steps to
+reproduce, and sanitized diagnostics where relevant.
+
 ## Development
+
+Protocol decoding lives in `parser.py`; `registry.py` merges gateway-local
+identities and reported state; `storage.py` persists the registry. The
+`coordinator.py` module bridges the existing Tuya manager and push connection,
+while `capture.py` records bounded diagnostic evidence. Entity platforms use
+`entity.py` for push updates and discovery. `operation_log.py` recognizes verified
+incoming operation vocabulary; it does not identify an outbound address.
 
 This project uses Python 3.13 and expects an isolated development environment.
 
@@ -116,6 +178,19 @@ python -m compileall -q custom_components/housegard_luma tests/housegard_luma
 ```
 
 The public test suite uses artificial labels and generated packets; it acts as
-behavioral regression coverage and does not include the maintainer's original
-private capture set. The exact protocol capture suite used during development is
-not distributed with this repository.
+behavioral regression coverage. Public test names and `SN`/`No` suffixes are
+synthetic. Runtime classification contains no installation-specific names or
+captured suffixes. The full private capture suite is not distributed with this
+repository.
+
+GitHub Actions runs the public tests, Ruff checks, compilation,
+HACS validation, and Home Assistant hassfest. Private evidence is excluded from
+Git, CI, and release artifacts.
+
+Push the public repository files to GitHub and wait for the validation jobs to
+pass. Publish tag `v0.0.2` with the notes in `CHANGELOG.md`, keeping the tag and
+manifest version aligned. HACS installs directly from the repository files.
+
+Before publishing, add GitHub repository topics such as `home-assistant`, `hacs`,
+`housegard`, and `tuya`, which are required by HACS validation. Create a GitHub
+release for the tag; a tag alone is not a HACS release.

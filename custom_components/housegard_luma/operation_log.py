@@ -1,24 +1,33 @@
-"""Exact controlled RC350 evidence, without inferred addressing or commands."""
+"""Classify operation vocabulary without installation-specific identifiers."""
 
 import re
 
 from .parser import raw_bytes
 
-# Literal UTF-16BE text, including capital H in the older captures and the
-# independently captured 2026-10-05 Test/Hush spellings. Do not repair spellings,
-# generalize suffixes, or decode an index.
-_SIGNATURES = {
-    "FjHrnkontroll SilHncH DHvice SN:0A011A1C".encode("utf-16-be"): "hush",
-    "FjHrnkontroll Locate Device No:0A00A011A1A".encode("utf-16-be"): "locate",
-    "Fjernkontroll Test Device SN:0A011A16".encode("utf-16-be"): "test",
-    "Fjernkontroll Silence Device SN:0A011A1C".encode("utf-16-be"): "hush",
+_ACTIONS = {
+    "Test Device SN": "test",
+    "Silence Device SN": "hush",
+    "SilHncH DHvice SN": "hush",
+    "Locate Device SN": "locate",
+    "Locate Device No": "locate",
 }
 
 
 def classify_operation_log(value: object) -> str | None:
-    """Recognize only entire verified byte strings; this supplies no identity."""
+    """Recognize action text only; names and opaque suffixes supply no identity."""
     raw = raw_bytes(value)
-    return _SIGNATURES.get(raw) if raw is not None else None
+    if raw is None or len(raw) > 4096:
+        return None
+    try:
+        text = raw.decode("utf-16-be")
+    except UnicodeDecodeError:
+        return None
+    match = re.fullmatch(
+        r"[^\x00-\x1f\x7f]+ (Test Device SN|Silence Device SN|SilHncH DHvice SN|"
+        r"Locate Device SN|Locate Device No):[0-9A-F]{8,11}",
+        text,
+    )
+    return _ACTIONS[match[1]] if match is not None else None
 
 
 def parse_online_event(value: object) -> tuple[str, int] | None:
