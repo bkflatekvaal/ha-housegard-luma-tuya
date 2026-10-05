@@ -1,69 +1,109 @@
 # Housegard Luma
 
-A Home Assistant custom integration for Housegard Luma gateways and paired
-smoke alarms, heat alarms and remote controllers. It uses the existing Home
-Assistant Tuya integration and its cloud push connection.
+A custom Home Assistant integration for Housegard Luma gateways and their paired
+smoke alarms, heat alarms, and the Luma RC350 remote. The integration uses the
+existing official Tuya integration and its cloud push connection; it does not add
+its own separate credentials, local keys, or custom cloud client.
 
-This repository is a publication preparation snapshot, not yet a completed HACS
-release. See [release preparation](RELEASE_PREPARATION.md) before publishing.
+This repository is a development/publication snapshot and is not yet a completed
+HACS release. See [RELEASE_PREPARATION.md](RELEASE_PREPARATION.md) before
+publishing or submitting it to HACS.
 
-## Requirements and setup
+## What it does
 
-- A Luma gateway available in the official Home Assistant Tuya integration.
-- Gateway product ID `s3x3xmgbeohtvm40` (shared product metadata, not a device ID).
-- The development installation runs Home Assistant 2026.9.4. Compatibility with
-  older versions is not established; this integration uses Tuya runtime internals.
+The component discovers Housegard devices that appear behind a Tuya gateway and
+tracks their state using the gateway's existing Tuya runtime.
 
-For manual installation, copy only `custom_components/housegard_luma` into your
-Home Assistant `custom_components` directory, restart Home Assistant, then add
-**Housegard Luma** in Settings → Devices & services and select the gateway.
-No additional Tuya credentials or local keys are requested by this integration.
-After the repository is published and validated, add
-`https://github.com/bkflatekvaal/ha-housegard-luma-tuya` as a HACS custom repository
-of type Integration, download it, restart Home Assistant, and add Housegard Luma.
-This does not imply inclusion in HACS's default catalog.
+Supported device classes in the current codebase include:
+
+- Luma gateway (WS2GW-R)
+- Smoke alarms
+- Heat alarms
+- Luma RC350 remote controller
+
+The integration creates a small set of HA entities for each discovered subdevice,
+including state and diagnostic entities for the gateway and each alarm.
+
+## Requirements
+
+- Home Assistant with the official Tuya integration already configured and
+  connected to the Housegard gateway.
+- A Luma gateway available in the Tuya device map.
+- The gateway product ID `s3x3xmgbeohtvm40`.
+- Development validation has been performed with Home Assistant 2026.9.4.
+  Older versions are not guaranteed to be compatible because this integration
+  depends on Tuya runtime internals.
+
+## Installation
+
+### Manual install
+
+1. Copy only the folder `custom_components/housegard_luma` into your Home
+   Assistant `custom_components` directory.
+2. Restart Home Assistant.
+3. In Home Assistant, open Settings → Devices & services.
+4. Add integration → choose `Housegard Luma`.
+5. Select the Luma gateway from the list of Tuya-managed gateways.
+
+The integration does not request additional Tuya credentials or local keys.
+
+### HACS setup
+
+After the repository is published and validated, it can be added as a custom
+repository in HACS of type Integration. The repository URL is:
+
+`https://github.com/bkflatekvaal/ha-housegard-luma-tuya`
+
+This does not imply that it is included in HACS's default catalog.
 
 ## Features
 
-- Automatic discovery and persistent gateway-local subdevice identity.
-- Smoke, Heat and Tamper binary sensors; Battery, raw RSSI and Last seen sensors.
-- Online state from verified inventory and supported Online events.
-- Gateway Devices, Online devices and Offline devices counts. Offline count
-  includes inventory records not confirmed Online; per-device unknown remains
-  distinguishable.
-- Per-alarm Locate, and gateway Refresh devices, Network Test and Sound Test.
-- Last-known state restoration. Persisted active alarms require a verified clear.
+The current implementation includes these behaviors:
 
-Gateway metadata is Housegard / WS2GW-R. Smoke and Heat use generic Luma class
-names because the available protocol cannot establish an exact commercial model.
-The remote retains the independently identified Luma RC350 name.
+- Automatic discovery and persistent gateway-local subdevice identity
+- Smoke, heat, and tamper binary sensors
+- Online connectivity state based on verified inventory and supported online
+  events
+- Battery, raw RSSI, and last-seen sensors
+- Inventory counts for total, online, and offline devices
+- Per-alarm Locate action
+- Gateway actions for Refresh devices, Network Test, and Sound Test
+- State restoration for previously known alarm states, with explicit verified
+  clear events required before a persisted active alarm can be reset
 
-Locate, Network Test and Sound Test have been user-verified in the development
-installation. Sound Test is audible. Setup requests inventory, not an alarm test.
-The main remaining live check is automatic Online → Offline → Online and count
-updates without manually pressing Refresh devices. No live tests are run by CI.
+Gateway metadata is reported as Housegard / WS2GW-R. Smoke and Heat alarms use
+generic Luma class names because the protocol does not reliably expose an exact
+commercial model. The remote retains its independently identified `Luma RC350`
+name when discovered.
 
-## Current limitations
+## Current limitations and caveats
 
-- RC350 outbound group Test/Locate/Hush is not implemented.
-- Incoming RC350 diagnostic classification matches a small set of exact observed
-  strings, including their generic Norwegian remote label. It is not generalized
-  to other names, indexes or firmware, and supplies no runtime device association.
-- Network Test completion/final-byte semantics are unresolved; count sensors use
-  inventory, not aggregate result frames.
-- RSSI is an uncalibrated raw value, not dBm. Unknown state remains unknown.
-- This is a community integration, not an official Housegard product.
+This project is still a community integration and there are important limitations:
+
+- RC350 outbound group Test/Locate/Hush actions are not implemented.
+- Incoming RC350 diagnostic classification is intentionally narrow and matches a
+  small set of exact observed strings; it is not generalized across all names,
+  indexes, and firmware variants.
+- Network Test completion and final-byte semantics are not fully resolved; the
+  count sensors are based on inventory data rather than aggregate result frames.
+- RSSI is exposed as a raw protocol value, not a calibrated dBm value.
+- Unknown or unsupported states remain unknown rather than being inferred.
+- The code is built around the current Tuya runtime and may need adjustments for
+  future HA/Tuya SDK changes.
 
 ## Diagnostics and privacy
 
-Diagnostics include raw protocol captures. These can contain device/room names,
-gateway identifiers and event timestamps even when other fields are redacted.
+Diagnostics may include raw protocol captures and low-level packet information.
+These can contain device names, room names, gateway identifiers, and timestamps,
+including values that are not fully redacted in some captures.
+
 Base64 encoding is not anonymization. Review and sanitize diagnostics before
-sharing them publicly; do not upload Home Assistant backups or `.storage` files.
+sharing them publicly. Do not upload Home Assistant backups or `.storage` files
+to public issue reports or community support threads.
 
 ## Development
 
-Use Python 3.13 and an isolated environment:
+This project uses Python 3.13 and expects an isolated development environment.
 
 ```sh
 python -m venv .venv
@@ -75,6 +115,7 @@ python -m ruff format --check custom_components/housegard_luma tests/housegard_l
 python -m compileall -q custom_components/housegard_luma tests/housegard_luma
 ```
 
-Public tests use artificial labels and generated packets. They are behavioral
-regressions, not new captured protocol evidence. The original exact capture suite
-is held separately by the maintainer and is not distributed in this repository.
+The public test suite uses artificial labels and generated packets; it acts as
+behavioral regression coverage and does not include the maintainer's original
+private capture set. The exact protocol capture suite used during development is
+not distributed with this repository.
