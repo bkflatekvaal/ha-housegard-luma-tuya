@@ -1,0 +1,15 @@
+{
+  "domain": "housegard_luma",
+  "name": "Housegard Luma",
+  "codeowners": [
+    "@bkflatekvaal"
+  ],
+  "config_flow": true,
+  "dependencies": [
+    "tuya"
+  ],
+  "iot_class": "cloud_push",
+  "version": "0.0.2",
+  "documentation": "https://github.com/bkflatekvaal/ha-housegard-luma-tuya",
+  "issue_tracker": "https://github.com/bkflatekvaal/ha-housegard-luma-tuya/issues"
+}

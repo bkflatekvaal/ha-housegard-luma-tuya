@@ -1,0 +1,27 @@
+# Local evidence must stay outside this repository. Defense in depth only.
+/private/
+/private_evidence/
+/PRIVATE*/
+/captures/
+/diagnostics/
+*.zip
+*.tar
+*.tar.gz
+*.log
+*.db
+*.db-*
+.storage/
+secrets.yaml
+configuration.yaml
+.env
+.env.*
+!.env.example
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.venv/
+.coverage
+htmlcov/
+.DS_Store
+Thumbs.db

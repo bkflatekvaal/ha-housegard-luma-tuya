@@ -1,0 +1,16 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Housegard Luma",
+        "description": "Velg en Luma-gateway som allerede er tilgjengelig via Tuya-integrasjonen.",
+        "data": {
+          "gateway": "Luma-gateway"
+        }
+      }
+    },
+    "abort": {
+      "no_gateways": "Fant ingen ukonfigurerte Housegard Luma-gatewayer i Tuya."
+    }
+  }
+}

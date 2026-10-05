@@ -1,0 +1,16 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Housegard Luma",
+        "description": "Select a Luma gateway already available through the Tuya integration.",
+        "data": {
+          "gateway": "Luma gateway"
+        }
+      }
+    },
+    "abort": {
+      "no_gateways": "No unconfigured Housegard Luma gateways were found in Tuya."
+    }
+  }
+}

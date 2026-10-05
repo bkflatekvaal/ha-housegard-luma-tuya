@@ -1,0 +1,25 @@
+Publication preparation review
+
+Included: 14 unchanged runtime Python modules, manifest, strings/translations,
+public documentation, HACS metadata, .gitignore, development dependencies,
+HA interface doubles and synthetic regression tests.
+
+Manifest-only changes: documentation URL, issues URL and GitHub codeowner.
+Runtime behavior and command bytes are unchanged.
+
+Excluded: original capture fixtures, investigation notes, model matrices, local
+paths/attachment references, HA configuration/storage, secrets, logs, databases,
+backups, caches, compiled Python, screenshots and all unrelated integrations.
+
+Privacy review: allowlisted source files; searched public plaintext and decoded
+Base64/byte literals for household names; checked for literal IPs/UUIDs and local
+paths. No such findings. This is an export review, not a guarantee about future
+files or third-party secret scanners.
+
+Retained deliberately: shared Tuya product ID, gateway model, and existing exact
+RC350 generic remote-label/event signatures. Event suffixes are not factory
+serials or credentials. These literals are needed for unchanged behavior.
+
+Validation: public synthetic suite 31 passed; Ruff lint/format and compilation
+passed. Separately preserved original evidence suite 556 passed. No live tests.
+HACS/hassfest publication validation remains pending; see RELEASE_PREPARATION.md.
