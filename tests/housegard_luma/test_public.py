@@ -113,7 +113,7 @@ def test_gateway_metadata_does_not_rename_device(ha, button_class):
     assert button._attr_device_info == {
         "identifiers": {("tuya", "example")},
         "manufacturer": "Housegard",
-        "model": "WS2GW-R",
+        "model": "Luma GW650",
     }
 
 

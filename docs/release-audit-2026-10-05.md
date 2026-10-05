@@ -1,5 +1,11 @@
 # V1 release audit — 2026-10-05
 
+Historical v0.1.0 audit. The subsequent v0.1.1 release preparation changes the
+primary gateway model to **Luma GW650**, retaining **WS2GW-R** as technical Tuya
+metadata, and uses release tag **v0.1.1**. See the current README/changelog and
+[OEM investigation](oem-platform-investigation-2026-10-05.md); version/model
+statements below describe the original audit rather than current release metadata.
+
 Core v1 functionality is considered complete, based on the user's live
 verification and offline regression coverage. The public integration is ready
 for release review after the existing hassfest/HACS CI gates pass. No release,

@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.1.1
+
+- Present the gateway as Housegard / Luma GW650 in Home Assistant, preserving
+  the user's configured name. Retain WS2GW-R as the technical Tuya/OEM model in
+  diagnostics and documentation.
+- Clarify tested hardware and document evidence for possible Heiman, Gardia,
+  and LINKD OEM variants without claiming compatibility or adding brand support.
+- Keep the existing verified features, command bytes, connectivity, and normal
+  diagnostic history behavior unchanged.
+
 ## 0.1.0
 
 - Redact name-bearing raw payloads and gateway identifiers from downloaded

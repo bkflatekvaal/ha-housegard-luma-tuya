@@ -65,7 +65,8 @@ def test_diagnostics_excludes_identifiers_and_reversible_payloads(ha):
         assert private not in encoded
     for forbidden in ("base64", "hex", "decoded_text", "gateway_id", "header_hex"):
         assert f'"{forbidden}"' not in encoded
-    assert result["gateway_model"] == "WS2GW-R"
+    assert result["gateway_model"] == "Luma GW650"
+    assert result["gateway_tuya_model"] == "WS2GW-R"
     assert result["inventory_counts"]["online_devices"] == 1
     assert result["subdevices"][0]["name"] == "**REDACTED**"
     assert result["subdevices"][0]["last_seen"] == now

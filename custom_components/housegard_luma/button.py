@@ -38,7 +38,7 @@ class LumaRefreshButton(ButtonEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={("tuya", gateway.gateway_id)},
             manufacturer="Housegard",
-            model="WS2GW-R",
+            model="Luma GW650",
         )
 
     @property

@@ -95,7 +95,8 @@ async def async_get_config_entry_diagnostics(hass, entry):
         devices.append(fields)
     return {
         "gateway_manufacturer": "Housegard",
-        "gateway_model": "WS2GW-R",
+        "gateway_model": "Luma GW650",
+        "gateway_tuya_model": "WS2GW-R",
         "gateway_available": gateway.available,
         "inventory_counts": gateway.registry.inventory_counts,
         "subdevices": devices,

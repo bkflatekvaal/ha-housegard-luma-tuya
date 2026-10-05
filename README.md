@@ -7,21 +7,30 @@ smoke alarms, heat alarms, and the Luma RC350 remote. The integration uses the
 existing official Tuya integration and its cloud push connection; it does not add
 its own separate credentials, local keys, or custom cloud client.
 
-Community integration, version **0.1.0**, with core v1 functionality complete.
-See [CHANGELOG.md](CHANGELOG.md) for release notes. This repository can be used as a HACS custom repository; it is
-not listed in the default HACS catalog.
+Community integration, version **0.1.1**, with core v1 functionality complete.
+See [CHANGELOG.md](CHANGELOG.md) for release notes. This repository can be used
+as a HACS custom repository; it is not listed in the default HACS catalog.
 
 ## What it does
 
 The component discovers Housegard devices that appear behind a Tuya gateway and
 tracks their state using the gateway's existing Tuya runtime.
 
-Supported device classes in the current codebase include:
+Only Housegard Luma hardware is currently tested and supported:
 
-- Luma gateway (WS2GW-R)
-- Smoke alarms
-- Heat alarms
-- Luma RC350 remote controller
+| Tested hardware | Home Assistant model |
+| --- | --- |
+| Housegard Luma GW650 gateway | Luma GW650 |
+| Housegard Luma Smoke Alarm class | Luma Smoke Alarm |
+| Housegard Luma Heat Alarm class | Luma Heat Alarm |
+| Housegard Luma RC350 remote | Luma RC350 |
+
+Housegard markets the gateway as
+[GW650](https://housegard.se/Product/Files/Global/604030%20Manual%20Housegard%20LUMA%20GW650%20Global_1.pdf).
+Tuya Device Details identifies the tested gateway's underlying Tuya/OEM model as
+`WS2GW-R`, product name `Wireless Interlink Gateway`, category `mal`, and
+product ID `s3x3xmgbeohtvm40`. Subdevices are carried in proprietary raw
+`sub_admin` records, rather than ordinary independent Tuya device records.
 
 The integration creates a small set of HA entities for each discovered subdevice,
 including state and diagnostic entities for the gateway and each alarm.
@@ -87,7 +96,8 @@ The current implementation includes these behaviors:
 - State restoration for previously known alarm states, with explicit verified
   clear events required before a persisted active alarm can be reset
 
-Gateway metadata is reported as Housegard / WS2GW-R. Smoke and Heat alarms use
+Gateway metadata is reported as Housegard / Luma GW650 without changing the
+user's friendly gateway name. Smoke and Heat alarms use
 generic Luma class names because the protocol does not reliably expose an exact
 commercial model. The remote retains its independently identified `Luma RC350`
 name when discovered.
@@ -105,7 +115,35 @@ buttons are pressed. Sending a command does not confirm its physical execution.
 Alarm states are updated from individual detector reports, not command echoes
 or remote button logs.
 
-## Current limitations and caveats
+## Other brands / OEM variants
+
+Other products appear to use related Sub-GHz alarm platforms, but compatibility
+with this integration is **potentially compatible / untested**, not supported:
+
+- **Heiman — strongly related hardware:** Heiman publishes the
+  [WS2GW-R gateway](https://www.heimantech.com/product/gateway-ws2gw-series).
+  Its [official HA integration](https://github.com/heimanhome/heiman_home)
+  uses Heiman Cloud, HTTPS APIs and MQTT; no matching Luma raw protocol was found.
+- **Gardia — strongly related / possible OEM (inference):** the
+  [Smart HUB 868 MHz](https://www.gardia.no/product/gardia-smart-hub-868-mhz/)
+  connects smoke/heat alarms and advertises Tuya/Smart Life app compatibility.
+  No WS2GW-R model, product ID or matching raw protocol was established.
+- **LINKD — verified matching Tuya product metadata; protocol untested:**
+  [HA Core issue #163024](https://github.com/home-assistant/core/issues/163024)
+  includes diagnostics matching the product ID, category, product name and
+  `sub_admin` DP. The available snapshot does not establish compatible inventory
+  or alarm frames. This is a useful future compatibility test case; CO support
+  is not implemented here.
+
+Only Housegard Luma hardware is currently tested and supported. See the
+[OEM investigation](docs/oem-platform-investigation-2026-10-05.md) for evidence
+and limits. If your gateway appears related, open an issue with its commercial
+model, Tuya-reported model, product name/category and redacted diagnostics.
+Sanitized inventory/protocol captures may help when appropriate; raw captures
+can contain names and serials. Never publish local keys, credentials, tokens,
+physical Tuya device/account IDs, MACs, UUIDs, factory serials, IPs or location.
+
+## Current limitations and non-blocking future work
 
 This project is still a community integration and there are important limitations:
 
@@ -116,11 +154,16 @@ This project is still a community integration and there are important limitation
   be identical except for a varying byte at the RSSI position; they do not
   establish an action opcode to replay. Gateway Sound Test and per-alarm Locate
   already have independently verified outbound commands.
+  Sound Test (`07 07 FF 02`) may be functionally related to RC350 Test, but
+  equivalence has not been protocol-verified.
 - Incoming diagnostic classification recognizes known operation vocabulary.
   Names and `SN`/`No` suffixes are treated as opaque input and do not establish
   remote identity, addressing, or a command payload.
 - Network Test completion and final-byte semantics are not fully resolved; the
   count sensors are based on inventory data rather than aggregate result frames.
+  Observations `07 07 FF 03 0C 01 00` (12 online / 1 offline) and
+  `07 07 FF 03 0D 00 00` (13 online / 0 offline) strongly support the count
+  interpretation, without proving completion semantics.
 - Inventory counts retain devices across partial updates. Offline devices counts
   records that are not known to be online, including unknown connectivity.
 - RC350 logs provide diagnostic classification, not Home Assistant device
@@ -162,7 +205,9 @@ sequence. This does not add a separate Test event entity or device trigger.
 
 Per-alarm Locate is live verified for Smoke and Heat and dynamically targets the
 inventory index. Gateway Network Test and Sound Test are implemented and live
-verified. Their verified commands remain `07 07 FF 03 3C` and `07 07 FF 02`,
+verified, including successful Sound Test from Home Assistant. Refresh devices
+and gateway device counts are also live verified. The verified Network Test
+and Sound Test commands remain `07 07 FF 03 3C` and `07 07 FF 02`,
 respectively. Setup/reload sends one inventory query (`02 07`) after restoration
 and platform setup; it never automatically sends Locate, Network Test, or Sound
 Test. Explicit Refresh presses request inventory subject to the existing
@@ -238,7 +283,7 @@ Git, CI, and release artifacts.
 
 Before tagging a release, run the checks above and ensure the GitHub Actions
 hassfest and HACS jobs pass. Keep the release tag and manifest version aligned;
-choose a new version for updates to an already published release. HACS installs
+use `v0.1.1` for this release. HACS installs
 directly from the public repository files. Include only public source/tests and
 exclude the ignored `PRIVATE/` evidence archive from manually built artifacts.
 
