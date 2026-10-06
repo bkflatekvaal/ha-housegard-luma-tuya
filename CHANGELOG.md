@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.1.2
 
 - Add provisional LINKD smoke detector type `0x17` support using the same
   protocol semantics as `0x02`, including inventory, smoke/tamper, telemetry,

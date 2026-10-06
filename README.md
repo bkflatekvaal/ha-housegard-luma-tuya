@@ -7,7 +7,7 @@ smoke alarms, heat alarms, and the Luma RC350 remote. The integration uses the
 existing official Tuya integration and its cloud push connection; it does not add
 its own separate credentials, local keys, or custom cloud client.
 
-Community integration, version **0.1.1**, with core v1 functionality complete.
+Community integration, version **0.1.2**, with core v1 functionality complete.
 See [CHANGELOG.md](CHANGELOG.md) for release notes. This repository can be used
 as a HACS custom repository; it is not listed in the default HACS catalog.
 
@@ -289,7 +289,7 @@ Git, CI, and release artifacts.
 
 Before tagging a release, run the checks above and ensure the GitHub Actions
 hassfest and HACS jobs pass. Keep the release tag and manifest version aligned;
-use `v0.1.1` for this release. HACS installs
+use `v0.1.2` for this release. HACS installs
 directly from the public repository files. Include only public source/tests and
 exclude the ignored `PRIVATE/` evidence archive from manually built artifacts.
 
