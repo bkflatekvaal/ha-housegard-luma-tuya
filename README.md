@@ -16,7 +16,11 @@ as a HACS custom repository; it is not listed in the default HACS catalog.
 The component discovers Housegard devices that appear behind a Tuya gateway and
 tracks their state using the gateway's existing Tuya runtime.
 
-Only Housegard Luma hardware is currently tested and supported:
+Only Housegard Luma hardware is currently live tested. LINKD smoke detector
+protocol type `0x17` has provisional support with the same behavior as `0x02`;
+confirmation on LINKD hardware is pending ([issue #1](https://github.com/bkflatekvaal/ha-housegard-luma-tuya/issues/1)).
+
+Tested Housegard hardware:
 
 | Tested hardware | Home Assistant model |
 | --- | --- |
@@ -117,8 +121,8 @@ or remote button logs.
 
 ## Other brands / OEM variants
 
-Other products appear to use related Sub-GHz alarm platforms, but compatibility
-with this integration is **potentially compatible / untested**, not supported:
+Other products appear to use related Sub-GHz alarm platforms. Compatibility
+evidence and implementation status vary by brand:
 
 - **Heiman — strongly related hardware:** Heiman publishes the
   [WS2GW-R gateway](https://www.heimantech.com/product/gateway-ws2gw-series).
@@ -128,14 +132,16 @@ with this integration is **potentially compatible / untested**, not supported:
   [Smart HUB 868 MHz](https://www.gardia.no/product/gardia-smart-hub-868-mhz/)
   connects smoke/heat alarms and advertises Tuya/Smart Life app compatibility.
   No WS2GW-R model, product ID or matching raw protocol was established.
-- **LINKD — verified matching Tuya product metadata; protocol untested:**
+- **LINKD — matching Tuya metadata; provisional type `0x17` support:**
   [HA Core issue #163024](https://github.com/home-assistant/core/issues/163024)
   includes diagnostics matching the product ID, category, product name and
-  `sub_admin` DP. The available snapshot does not establish compatible inventory
-  or alarm frames. This is a useful future compatibility test case; CO support
-  is not implemented here.
+  `sub_admin` DP. [Integration issue #1](https://github.com/bkflatekvaal/ha-housegard-luma-tuya/issues/1)
+  supplies matching individual-report and inventory framing.
+  Type `0x17` uses the existing smoke detector field mappings and Locate command
+  provisionally; alarm transitions, telemetry, connectivity, and commands still
+  need hardware confirmation. CO support is not implemented here.
 
-Only Housegard Luma hardware is currently tested and supported. See the
+Only Housegard Luma hardware is currently live tested. See the
 [OEM investigation](docs/oem-platform-investigation-2026-10-05.md) for evidence
 and limits. If your gateway appears related, open an issue with its commercial
 model, Tuya-reported model, product name/category and redacted diagnostics.

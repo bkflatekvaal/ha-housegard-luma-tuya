@@ -262,7 +262,7 @@ class DP38Capture:
             "discovered_indexes": indexes,
             "unverified_status_bytes": unverified_status_bytes,
             "smoke_raw": (
-                raw[6] if result == "individual" and raw[3] == 0x02 else None
+                raw[6] if result == "individual" and raw[3] in (0x02, 0x17) else None
             ),
         }
 

@@ -69,7 +69,8 @@ def _parse_individual_report(raw: bytes) -> LumaSubdevice | None:
     if len(raw) < 19:
         return None
     device_type = raw[3]
-    is_detector = device_type in (0x02, 0x12)
+    # LINKD 0x17 provisionally shares the 0x02 layout; hardware confirmation pending.
+    is_detector = device_type in (0x02, 0x17, 0x12)
     status = raw[8:10]
     tamper = {bytes((0, 0)): False, bytes((1, 0)): True}.get(status)
     name_len = int.from_bytes(raw[17:19], "little")
@@ -90,7 +91,7 @@ def _parse_individual_report(raw: bytes) -> LumaSubdevice | None:
 
     # Real smoke Triggered -> Restored capture, 2026-09-27. Unknown is
     # deliberately not clear or a retained stale alarm state.
-    if device_type == 0x02 and raw[6] not in (0, 1):
+    if device_type in (0x02, 0x17) and raw[6] not in (0, 1):
         _LOGGER.debug("Unknown smoke state byte[6]=0x%02x at index %d", raw[6], raw[2])
     # Controlled Heat Test (2026-09-29): 00; thermal trigger (2026-10-05): 01.
     # This is full-packet offset 6, not an inventory body offset.
@@ -98,7 +99,7 @@ def _parse_individual_report(raw: bytes) -> LumaSubdevice | None:
         _LOGGER.debug("Unknown heat state byte[6]=0x%02x at index %d", raw[6], raw[2])
     fw = raw[16]
     return LumaSubdevice(
-        smoke={0: False, 1: True}.get(raw[6]) if device_type == 0x02 else None,
+        smoke={0: False, 1: True}.get(raw[6]) if device_type in (0x02, 0x17) else None,
         heat={0: False, 1: True}.get(raw[6]) if device_type == 0x12 else None,
         index=raw[2],
         device_type=device_type,
@@ -183,7 +184,7 @@ def inspect_inventory(value: object) -> tuple[list[LumaSubdevice], dict]:
         except UnicodeDecodeError:
             detail["reason"] = "invalid_utf16"
             continue
-        if body[1] not in (0x02, 0x12, 0x0A):
+        if body[1] not in (0x02, 0x17, 0x12, 0x0A):
             detail["reason"] = "unknown_type"
             continue
         records.append(

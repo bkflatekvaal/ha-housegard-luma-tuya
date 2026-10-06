@@ -54,7 +54,7 @@ def deserialize(data, gateway_id):
             type(index) is not int
             or not 0 <= index <= 255
             or type(kind) is not int
-            or kind not in (2, 0x12, 0x0A)
+            or kind not in (2, 0x17, 0x12, 0x0A)
         ):
             continue
 
@@ -82,8 +82,8 @@ def deserialize(data, gateway_id):
             else None,
             battery=number("battery", 100),
             rssi=number("rssi", 255),
-            tamper=boolean("tamper") if kind in (2, 0x12) else None,
-            smoke=boolean("smoke") if kind == 2 else None,
+            tamper=boolean("tamper") if kind in (2, 0x17, 0x12) else None,
+            smoke=boolean("smoke") if kind in (2, 0x17) else None,
             heat=boolean("heat") if kind == 0x12 else None,
             unknown_13=None,
             last_seen=seen,

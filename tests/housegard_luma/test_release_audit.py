@@ -346,7 +346,7 @@ def test_setup_reload_cleanup_and_gateway_isolation(ha, setup_error):
     asyncio.run(scenario())
 
 
-@pytest.mark.parametrize("kind,field", [(2, "smoke"), (18, "heat")])
+@pytest.mark.parametrize("kind,field", [(2, "smoke"), (0x17, "smoke"), (18, "heat")])
 def test_restore_cached_inventory_and_verified_alarm_clear(ha, kind, field):
     storage = importlib.import_module(f"{PACKAGE}.storage")
     gw, _ = gateway(ha)

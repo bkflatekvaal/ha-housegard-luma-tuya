@@ -10,7 +10,7 @@ from .const import DOMAIN
 
 @callback
 def async_setup_subdevices(
-    hass, entry, async_add_entities, factory, *, device_types=(0x02, 0x12)
+    hass, entry, async_add_entities, factory, *, device_types=(0x02, 0x17, 0x12)
 ):
     gateway = entry.runtime_data
     added = set()

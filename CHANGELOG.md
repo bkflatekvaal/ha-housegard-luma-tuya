@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Add provisional LINKD smoke detector type `0x17` support using the same
+  protocol semantics as `0x02`, including inventory, smoke/tamper, telemetry,
+  connectivity, persistence, and Locate. Hardware confirmation is pending
+  ([issue #1](https://github.com/bkflatekvaal/ha-housegard-luma-tuya/issues/1)).
+
 ## 0.1.1
 
 - Present the gateway as Housegard / Luma GW650 in Home Assistant, preserving

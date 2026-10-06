@@ -21,7 +21,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         entry,
         async_add_entities,
         lambda gateway, index: [LumaOnline(gateway, index)],
-        device_types=(0x02, 0x12, 0x0A),
+        device_types=(0x02, 0x17, 0x12, 0x0A),
     )
 
 
@@ -39,7 +39,7 @@ class LumaTamper(LumaEntity, BinarySensorEntity):
 
 def _detector_entities(gateway, index):
     entities = [LumaTamper(gateway, index)]
-    if gateway.registry.devices[index].device_type == 0x02:
+    if gateway.registry.devices[index].device_type in (0x02, 0x17):
         entities.append(LumaSmoke(gateway, index))
     elif gateway.registry.devices[index].device_type == 0x12:
         entities.append(LumaHeat(gateway, index))

@@ -26,7 +26,7 @@ def inventory(kind=2, online=1):
     return bytes((2, 7, 1, len(body))) + body
 
 
-@pytest.mark.parametrize("kind,field", [(2, "smoke"), (18, "heat")])
+@pytest.mark.parametrize("kind,field", [(2, "smoke"), (0x17, "smoke"), (18, "heat")])
 @pytest.mark.parametrize("state,expected", [(0, False), (1, True), (255, None)])
 def test_alarm_states(kind, field, state, expected):
     device = parse_sub_admin(packet(kind=kind, alarm=state))
@@ -46,7 +46,7 @@ def test_name_framing(name):
     assert parse_sub_admin(raw[:-2]) is None
 
 
-@pytest.mark.parametrize("kind", [2, 18, 10])
+@pytest.mark.parametrize("kind", [2, 0x17, 18, 10])
 def test_inventory_online_transitions(kind):
     registry = SubdeviceRegistry("example-gateway")
     for online in (1, 0, 1):
@@ -61,7 +61,7 @@ def test_inventory_online_transitions(kind):
         }
 
 
-@pytest.mark.parametrize("kind,field", [(2, "smoke"), (18, "heat")])
+@pytest.mark.parametrize("kind,field", [(2, "smoke"), (0x17, "smoke"), (18, "heat")])
 def test_remote_inventory_and_text_do_not_clear_alarm(kind, field):
     registry = SubdeviceRegistry("example-gateway")
     registry.update(packet(kind=kind, alarm=1))
@@ -94,7 +94,13 @@ def gateway(ha):
 
 
 @pytest.mark.parametrize(
-    "kind,model", [(2, "Luma Smoke Alarm"), (18, "Luma Heat Alarm"), (10, "Luma RC350")]
+    "kind,model",
+    [
+        (2, "Luma Smoke Alarm"),
+        (0x17, "Luma Smoke Alarm"),
+        (18, "Luma Heat Alarm"),
+        (10, "Luma RC350"),
+    ],
 )
 @pytest.mark.parametrize("firmware", [0x27, 0x39, 0xFF])
 def test_generic_model_survives_firmware_changes(ha, kind, model, firmware):
@@ -117,7 +123,7 @@ def test_gateway_metadata_does_not_rename_device(ha, button_class):
     }
 
 
-@pytest.mark.parametrize("kind,field", [(2, "smoke"), (18, "heat")])
+@pytest.mark.parametrize("kind,field", [(2, "smoke"), (0x17, "smoke"), (18, "heat")])
 def test_same_entity_updates_without_recreation(ha, kind, field):
     gw, entry = gateway(ha)
     platform = importlib.import_module(f"{PACKAGE}.binary_sensor")
@@ -234,3 +240,52 @@ def test_command_failures_are_reported_without_transport_details(ha, method, res
         asyncio.run(getattr(gw, method)())
     assert "private" not in str(error.value)
     assert gw.registry.devices == {}
+
+
+@pytest.mark.parametrize("kind", [2, 0x17])
+def test_smoke_type_persistence_entities_locate_and_online(ha, kind):
+    gw, entry = gateway(ha)
+    gw.registry.update(packet(kind=kind, alarm=1))
+    storage = importlib.import_module(f"{PACKAGE}.storage")
+    gw.registry.devices = storage.deserialize(storage.serialize(gw.registry), "example")
+    restored = gw.registry.devices[42]
+    assert restored.device_type == kind
+    assert restored.smoke is True and restored.tamper is False
+    assert (restored.battery, restored.rssi) == (85, 50)
+    assert restored.online is None
+    gw.registry.update(packet(kind=kind, alarm=255))
+    assert gw.registry.devices[42].smoke is True
+    gw.registry.update(packet(kind=kind, alarm=0))
+    assert gw.registry.devices[42].smoke is False
+
+    entities = []
+    for platform in ("binary_sensor", "sensor", "button"):
+        module = importlib.import_module(f"{PACKAGE}.{platform}")
+        asyncio.run(module.async_setup_entry(gw.hass, entry, entities.extend))
+    device_entities = [e for e in entities if getattr(e, "index", None) == 42]
+    assert {e._attr_unique_id for e in device_entities} == {
+        f"example_42_{key}"
+        for key in (
+            "smoke",
+            "tamper",
+            "online",
+            "battery",
+            "rssi",
+            "last_seen",
+            "locate",
+        )
+    }
+    gw.manager.mq = object()
+    sent = []
+    gw.manager.send_commands = lambda *args: sent.append(args)
+    asyncio.run(gw.async_locate(42))
+    assert sent == [("example", [{"code": "sub_admin", "value": "BwcqBA=="}])]
+    assert gw.registry.apply_online_event(
+        "Detector A Smoke Online SN:ABCDEF12".encode("utf-16-be"), datetime.now(UTC)
+    )
+    assert gw.registry.devices[42].online is True
+    assert not gw.registry.apply_online_event(
+        "Detector A Heat Online SN:ABCDEF12".encode("utf-16-be"), datetime.now(UTC)
+    )
+    gw.capture.record(packet(kind=kind, alarm=1), "live_report")
+    assert gw.capture.diagnostics()["packets"][-1]["smoke_raw"] == 1

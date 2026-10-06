@@ -33,7 +33,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         lambda gateway, index: [
             LumaSensor(gateway, index, key) for key in ("battery", "rssi", "last_seen")
         ],
-        device_types=(0x02, 0x12, 0x0A),
+        device_types=(0x02, 0x17, 0x12, 0x0A),
     )
 
 

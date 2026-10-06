@@ -133,7 +133,10 @@ class SubdeviceRegistry:
             return False
         name, kind = event
         matches = [d for d in self.devices.values() if d.name == name]
-        if len(matches) != 1 or matches[0].device_type != kind:
+        if len(matches) != 1:
+            return False
+        device_kind = matches[0].device_type
+        if device_kind != kind and not (kind == 0x02 and device_kind == 0x17):
             return False
         matches[0].online_event_received_at = received_at
         return True

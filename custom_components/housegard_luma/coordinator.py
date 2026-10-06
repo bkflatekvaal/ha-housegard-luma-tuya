@@ -31,6 +31,7 @@ from .storage import RegistryStorage
 _LOGGER = logging.getLogger(__name__)
 MODELS = {
     0x02: "Luma Smoke Alarm",
+    0x17: "Luma Smoke Alarm",
     0x12: "Luma Heat Alarm",
     0x0A: "Luma RC350",
 }
@@ -192,7 +193,7 @@ class LumaGateway:
             and device is not None
             and type(device.index) is int
             and device.index == index
-            and device.device_type in (0x02, 0x12)
+            and device.device_type in (0x02, 0x17, 0x12)
             and getattr(self.manager, "mq", None) is not None
             and callable(getattr(self.manager, "send_commands", None))
         )
